@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './App';
+import Series from './Series.js';
 import './index.css';
 
 ReactDOM.render(
-  <App />,
+  <Series />,
   document.getElementById('root')
 );
