@@ -1,24 +1,58 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import DefaultImage from './default.jpg';
+import DefaultPicture from './default.jpg';
 
 var Series = React.createClass({
+
+  getInitialState: function(){
+    return {series: [],
+            inputValue: '',
+            inputPicturePath: DefaultPicture}
+  },
+
+  updateInputValue: function(evt){
+    this.setState({
+      inputValue: evt.target.value
+    })
+
+  },
+
+  addSerie: function(e){
+    e.preventDefault()
+    //Copy of state series
+    var nextArray =[]
+    for (var serie of this.state.series){
+      nextArray.push(serie)
+    }
+
+    nextArray.push({
+      name: this.state.inputValue,
+      key: Date.now(),
+      //pictureUrl: Recup URL or default if empty
+    })
+
+    this.setState({
+      series: nextArray,
+      inputValue: ''
+    })
+
+  },
 
   render: function(){
 
     return(
       <div className='App'>
         <div className='SeriesForm'>
-          <form onSubmit={this.addItem}>
+          <form onSubmit={this.addSerie}>
             <label>
-              <input type='text' name='element' placeholder='Enter a new serie' value='{this.state.inputValue}' onChange='{this.updateInputValue}' />
+              <input type='text' name='element' placeholder='Enter a new serie' value={this.state.inputValue} onChange={this.updateInputValue} />
             </label>
-            <button type='button' onClick='{this.addItem}'> Add picture </button>
-            <button type='button' onClick='{this.addItem}'> Add </button>
+            <button type='button' onClick={this.addSerie}> Add </button>
           </form>
-          <img src={DefaultImage} />
+          <button type='button' onClick={this.addSerie}> Add picture </button>
+          <img src={DefaultPicture} />
         </div>
-        <SeriesList />
+        <SeriesList entries= {this.state.series} />
       </div>
     )
   }
@@ -27,15 +61,31 @@ var Series = React.createClass({
 
 var SeriesList = React.createClass({
 
+  getInitialState: function(){
+    return {episodes: [],}
+  },
+
   render: function(){
+    var seriesEntries = this.props.entries
+
+    function createSeries (serie){
+      //Delete function here (delete series and all episodes ?)
+      return (
+        <li key={serie.key}>
+          {serie.name}
+          <button type='button'> Add Episode </button>
+          <EpisodesList/>
+        </li>
+    )}
+
+    var seriesList = seriesEntries.map(createSeries)
 
     return(
       <div className='SeriesList' >
         <label> Series List </label>
-          <form onSubmit={this.addItem}>
-            <button type='button' onClick='{this.addItem}'> Add Episode </button>
-          </form>
-        <EpisodesList />
+        <ul>
+          {seriesList}
+        </ul>
       </div>
     )
   }
