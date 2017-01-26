@@ -1,46 +1,59 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import DefaultPicture from './default.jpg';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import DefaultPicture from './default.jpg'
 
 var Series = React.createClass({
-
-  getInitialState: function(){
+  getInitialState: function () {
     return {series: [],
-            inputValue: '',
-            inputPicturePath: DefaultPicture}
+      inputValue: '',
+      inputPicturePath: DefaultPicture}
   },
 
-  updateInputValue: function(evt){
+  updateInputValue: function (evt) {
     this.setState({
       inputValue: evt.target.value
     })
-
   },
 
-  addSerie: function(e){
+  addSerie: function (e) {
     e.preventDefault()
-    //Copy of state series
-    var nextArray =[]
-    for (var serie of this.state.series){
+    // Copy of state series
+    var nextArray = []
+    for (var serie of this.state.series) {
       nextArray.push(serie)
     }
 
     nextArray.push({
       name: this.state.inputValue,
       key: Date.now(),
-      //pictureUrl: Recup URL or default if empty
+      eps: 0
+      // pictureUrl: Recup URL or default if empty
     })
 
     this.setState({
       series: nextArray,
       inputValue: ''
     })
-
   },
 
-  render: function(){
+  addEpisode: function (keyToIncrease) {
+    var nextSeries = []
 
-    return(
+    for (var serie of this.state.series) {
+      if (serie.key === keyToIncrease) {
+        serie.eps += 1
+        nextSeries.push(serie)
+      }
+      else nextSeries.push(serie)
+    }
+
+    this.setState({
+      series: nextSeries
+    })
+  },
+
+  render: function () {
+    return (
       <div className='App'>
         <div className='SeriesForm'>
           <form onSubmit={this.addSerie}>
@@ -49,10 +62,8 @@ var Series = React.createClass({
             </label>
             <button type='button' onClick={this.addSerie}> Add </button>
           </form>
-          <button type='button' onClick={this.addSerie}> Add picture </button>
-          <img src={DefaultPicture} />
         </div>
-        <SeriesList entries= {this.state.series} />
+        <SeriesList entries={this.state.series} episode={this.addEpisode} />
       </div>
     )
   }
@@ -61,26 +72,32 @@ var Series = React.createClass({
 
 var SeriesList = React.createClass({
 
-  getInitialState: function(){
-    return {episodes: [],}
+  getInitialState: function () {
+    return {episodes: []}
   },
 
-  render: function(){
+  render: function () {
     var seriesEntries = this.props.entries
+    var addEp = this.props.episode
 
-    function createSeries (serie){
-      //Delete function here (delete series and all episodes ?)
+    function createSeries (serie) {
+      // Delete function here (delete series and all episodes ?)
+
+      function addAnEpisode () {
+        addEp(serie.key)
+      }
       return (
         <li key={serie.key}>
           {serie.name}
-          <button type='button'> Add Episode </button>
-          <EpisodesList/>
+          <button type='button' onClick={addAnEpisode}> Add Episode </button>
+          <EpisodesList nbEp={serie.eps} />
         </li>
-    )}
+      )
+    }
 
     var seriesList = seriesEntries.map(createSeries)
 
-    return(
+    return (
       <div className='SeriesList' >
         <label> Series List </label>
         <ul>
@@ -93,16 +110,13 @@ var SeriesList = React.createClass({
 })
 
 var EpisodesList = React.createClass({
-
-  render: function(){
-
-    return(
+  render: function () {
+    return (
       <div className='EpisodesList' >
-        <label> Episodes List </label>
+        <label> You watched {this.props.nbEp} episode(s) </label>
       </div>
     )
   }
-
 })
 
 export default Series
