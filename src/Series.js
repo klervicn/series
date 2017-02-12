@@ -1,5 +1,4 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
 
 class Series extends React.Component {
   constructor () {
@@ -10,6 +9,7 @@ class Series extends React.Component {
     this.updateInputValue = this.updateInputValue.bind(this)
     this.addSerie = this.addSerie.bind(this)
     this.addEpisode = this.addEpisode.bind(this)
+    this.removeEpisode = this.removeEpisode.bind(this)
   }
 
   updateInputValue (evt) {
@@ -30,7 +30,6 @@ class Series extends React.Component {
       name: this.state.inputValue,
       key: Date.now(),
       eps: 0
-      // pictureUrl: Recup URL or default if empty
     })
 
     this.setState({
@@ -48,7 +47,20 @@ class Series extends React.Component {
         nextSeries.push(serie)
       } else nextSeries.push(serie)
     }
+    this.setState({
+      series: nextSeries
+    })
+  }
 
+  removeEpisode (keyToRemove) {
+    var nextSeries = []
+
+    for (var serie of this.state.series) {
+      if (serie.key === keyToRemove && serie.eps >= 1) {
+        serie.eps -= 1
+        nextSeries.push(serie)
+      } else nextSeries.push(serie)
+    }
     this.setState({
       series: nextSeries
     })
@@ -65,7 +77,7 @@ class Series extends React.Component {
             <button type='button' onClick={this.addSerie}> Add </button>
           </form>
         </div>
-        <SeriesList entries={this.state.series} episode={this.addEpisode} />
+        <SeriesList entries={this.state.series} addEp={this.addEpisode} remEp={this.removeEpisode} />
       </div>
     )
   }
@@ -76,20 +88,30 @@ class SeriesList extends React.Component {
 
   render () {
     var seriesEntries = this.props.entries
-    var addEp = this.props.episode
+    var addEp = this.props.addEp
+    var remEp = this.props.remEp
+    var removeButton = null
 
     function createSeries (serie) {
-      // Delete function here (delete series and all episodes ?)
+      if (serie.eps >= 1) {
+        removeButton = (<button type='button' onClick={removeAnEpisode}> Remove episode </button>)
+      }
 
       function addAnEpisode () {
         addEp(serie.key)
       }
+
+      function removeAnEpisode () {
+        remEp(serie.key)
+      }
+
       return (
         <li key={serie.key}>
           {serie.name + ' '}
           <button type='button' onClick={addAnEpisode}> Add Episode </button>
           <ImageUpload />
           <EpisodesList nbEp={serie.eps} />
+          {removeButton}
         </li>
       )
     }
@@ -98,7 +120,6 @@ class SeriesList extends React.Component {
 
     return (
       <div className='SeriesList' >
-        <label> Series List </label>
         <ul>
           {seriesList}
         </ul>
@@ -142,13 +163,13 @@ class ImageUpload extends React.Component {
         imagePreviewUrl: reader.result
       })
     }
-
     reader.readAsDataURL(file)
   }
 
   render () {
     let {imagePreviewUrl} = this.state
     let $imagePreview = null
+
     if (imagePreviewUrl) {
       $imagePreview = (<img src={imagePreviewUrl} />)
     } else {
