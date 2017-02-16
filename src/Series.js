@@ -1,4 +1,5 @@
 import React from 'react'
+// import "./Series.css"
 
 class Series extends React.Component {
   constructor () {
@@ -10,6 +11,7 @@ class Series extends React.Component {
     this.addSerie = this.addSerie.bind(this)
     this.addEpisode = this.addEpisode.bind(this)
     this.removeEpisode = this.removeEpisode.bind(this)
+    this.removeSerie = this.removeSerie.bind(this)
   }
 
   updateInputValue (evt) {
@@ -29,7 +31,7 @@ class Series extends React.Component {
     nextArray.push({
       name: this.state.inputValue,
       key: Date.now(),
-      eps: 0
+      nbEps: 0
     })
 
     this.setState({
@@ -38,12 +40,26 @@ class Series extends React.Component {
     })
   }
 
+  removeSerie (keyToRemove) {
+    var nextSeries = []
+
+    for (var serie of this.state.series) {
+      if (serie.key !== keyToRemove) {
+        nextSeries.push(serie)
+      }
+
+      this.setState({
+        series: nextSeries
+      })
+    }
+  }
+
   addEpisode (keyToIncrease) {
     var nextSeries = []
 
     for (var serie of this.state.series) {
       if (serie.key === keyToIncrease) {
-        serie.eps += 1
+        serie.nbEps += 1
         nextSeries.push(serie)
       } else nextSeries.push(serie)
     }
@@ -56,8 +72,8 @@ class Series extends React.Component {
     var nextSeries = []
 
     for (var serie of this.state.series) {
-      if (serie.key === keyToRemove && serie.eps >= 1) {
-        serie.eps -= 1
+      if (serie.key === keyToRemove && serie.nbEps >= 1) {
+        serie.nbEps -= 1
         nextSeries.push(serie)
       } else nextSeries.push(serie)
     }
@@ -77,7 +93,7 @@ class Series extends React.Component {
             <button type='button' onClick={this.addSerie}> Add </button>
           </form>
         </div>
-        <SeriesList entries={this.state.series} addEp={this.addEpisode} remEp={this.removeEpisode} />
+        <SeriesList entries={this.state.series} addEp={this.addEpisode} remEp={this.removeEpisode} remSerie={this.removeSerie} />
       </div>
     )
   }
@@ -90,10 +106,11 @@ class SeriesList extends React.Component {
     var seriesEntries = this.props.entries
     var addEp = this.props.addEp
     var remEp = this.props.remEp
+    var remSerie = this.props.remSerie
     var removeButton = null
 
     function createSeries (serie) {
-      if (serie.eps >= 1) {
+      if (serie.nbEps >= 1) {
         removeButton = (<button type='button' onClick={removeAnEpisode}> Remove episode </button>)
       }
 
@@ -105,14 +122,20 @@ class SeriesList extends React.Component {
         remEp(serie.key)
       }
 
+      function removeASerie () {
+        remSerie(serie.key)
+      }
+
       return (
-        <li key={serie.key}>
+        <li key={serie.key} classname='SeriesList'>
           {serie.name + ' '}
           <button type='button' onClick={addAnEpisode}> Add Episode </button>
+          <button type='button' onClick={removeASerie}> Remove Serie </button>
           <ImageUpload />
-          <EpisodesList nbEp={serie.eps} />
+          <EpisodesList nbEp={serie.nbEps} />
           {removeButton}
         </li>
+
       )
     }
 
