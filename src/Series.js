@@ -1,17 +1,24 @@
 import React from 'react'
 // import "./Series.css"
+var storage = localStorage
 
 class Series extends React.Component {
   constructor () {
     super()
-    this.state = {series: [],
-      inputValue: ''}
 
+    if (storage.length !== 0) {
+      this.state = {series: JSON.parse(storage.getItem('series')),
+        inputValue: ''}
+    } else {
+      this.state = {series: [],
+        inputValue: ''}
+    }
     this.updateInputValue = this.updateInputValue.bind(this)
     this.addSerie = this.addSerie.bind(this)
     this.addEpisode = this.addEpisode.bind(this)
     this.removeEpisode = this.removeEpisode.bind(this)
     this.removeSerie = this.removeSerie.bind(this)
+    this.setPicture = this.setPicture.bind(this)
   }
 
   updateInputValue (evt) {
@@ -22,8 +29,8 @@ class Series extends React.Component {
 
   addSerie (e) {
     e.preventDefault()
-    // Copy of state series
     var nextArray = []
+
     for (var serie of this.state.series) {
       nextArray.push(serie)
     }
@@ -31,8 +38,11 @@ class Series extends React.Component {
     nextArray.push({
       name: this.state.inputValue,
       key: Date.now(),
-      nbEps: 0
+      nbEps: 0,
+      pictureURL: ''
     })
+
+    storage.setItem('series', JSON.stringify(nextArray))
 
     this.setState({
       series: nextArray,
@@ -47,6 +57,8 @@ class Series extends React.Component {
       if (serie.key !== keyToRemove) {
         nextSeries.push(serie)
       }
+
+      storage.setItem('series', JSON.stringify(nextSeries))
 
       this.setState({
         series: nextSeries
@@ -63,6 +75,7 @@ class Series extends React.Component {
         nextSeries.push(serie)
       } else nextSeries.push(serie)
     }
+    storage.setItem('series', JSON.stringify(nextSeries))
     this.setState({
       series: nextSeries
     })
@@ -77,6 +90,22 @@ class Series extends React.Component {
         nextSeries.push(serie)
       } else nextSeries.push(serie)
     }
+    storage.setItem('series', JSON.stringify(nextSeries))
+    this.setState({
+      series: nextSeries
+    })
+  }
+
+  setPicture (keyToChange, newPictureURL) {
+    var nextSeries = []
+
+    for (var serie of this.state.series) {
+      if (serie.key === keyToChange) {
+        serie.pictureURL = newPictureURL
+        nextSeries.push(serie)
+      } else nextSeries.push(serie)
+    }
+    storage.setItem('series', JSON.stringify(nextSeries))
     this.setState({
       series: nextSeries
     })
@@ -93,7 +122,7 @@ class Series extends React.Component {
             <button type='button' onClick={this.addSerie}> Add </button>
           </form>
         </div>
-        <SeriesList entries={this.state.series} addEp={this.addEpisode} remEp={this.removeEpisode} remSerie={this.removeSerie} />
+        <SeriesList entries={this.state.series} addEpisode={this.addEpisode} removeEpisode={this.removeEpisode} removeSerie={this.removeSerie} setPicture={this.setPicture} />
       </div>
     )
   }
@@ -104,9 +133,10 @@ class SeriesList extends React.Component {
 
   render () {
     var seriesEntries = this.props.entries
-    var addEp = this.props.addEp
-    var remEp = this.props.remEp
-    var remSerie = this.props.remSerie
+    var addEpisode = this.props.addEpisode
+    var removeEpisode = this.props.removeEpisode
+    var removeSerie = this.props.removeSerie
+    var setPicture = this.props.setPicture
     var removeButton = null
 
     function createSeries (serie) {
@@ -115,23 +145,23 @@ class SeriesList extends React.Component {
       }
 
       function addAnEpisode () {
-        addEp(serie.key)
+        addEpisode(serie.key)
       }
 
       function removeAnEpisode () {
-        remEp(serie.key)
+        removeEpisode(serie.key)
       }
 
       function removeASerie () {
-        remSerie(serie.key)
+        removeSerie(serie.key)
       }
 
       return (
-        <li key={serie.key} classname='SeriesList'>
+        <li key={serie.key} className='SeriesList'>
           {serie.name + ' '}
           <button type='button' onClick={addAnEpisode}> Add Episode </button>
           <button type='button' onClick={removeASerie}> Remove Serie </button>
-          <ImageUpload />
+          <SeriePicture setPicture={setPicture} serieKey={serie.key} seriePictureURL={serie.pictureURL} />
           <EpisodesList nbEp={serie.nbEps} />
           {removeButton}
         </li>
@@ -139,7 +169,7 @@ class SeriesList extends React.Component {
       )
     }
 
-    var seriesList = seriesEntries.map(createSeries)
+    var seriesList = (seriesEntries.map(createSeries))
 
     return (
       <div className='SeriesList' >
@@ -149,8 +179,18 @@ class SeriesList extends React.Component {
       </div>
     )
   }
-
 }
+SeriesList.PropTypes = {
+  entries: React.PropTypes.array
+}
+
+SeriesList.defaultProps = {
+  entries: [{name: '',
+    key: Date.now(),
+    nbEps: 0,
+    pictureURL: ''}]
+}
+
 class EpisodesList extends React.Component {
   render () {
     var episodesList = []
@@ -168,7 +208,53 @@ class EpisodesList extends React.Component {
   }
 }
 
-class ImageUpload extends React.Component {
+class SeriePicture extends React.Component {
+
+  constructor () {
+    super()
+    this.state = {inputValue: ''}
+    this.updateInputValue = this.updateInputValue.bind(this)
+  }
+
+  updateInputValue (evt) {
+    this.setState({
+      inputValue: evt.target.value
+    })
+  }
+
+  render () {
+    var setPicture = this.props.setPicture
+    var serieKey = this.props.serieKey
+    var pathPicture = this.props.seriePictureURL
+    var txt = this.state.inputValue
+
+    function setSeriePicture () {
+      setPicture(serieKey, txt)
+    }
+
+    function displayPicture () {
+      pathPicture = txt
+      setSeriePicture()
+    }
+
+    return (
+      <div className='PictureForm'>
+        <form onSubmit={this.updateInputValue}>
+          <label>
+            <input type='text' name='element' placeholder='TypePicture Path' value={this.state.inputValue} onChange={this.updateInputValue} />
+          </label>
+          <button type='button' onClick={displayPicture}> Save </button>
+        </form>
+        <div className='imgPreview'>
+          <img src={pathPicture} alt='' />
+        </div>
+      </div>
+    )
+  }
+
+}
+
+/* class ImageUpload extends React.Component {
   constructor (props) {
     super(props)
     this.state = {file: '', imagePreviewUrl: ''}
@@ -190,12 +276,34 @@ class ImageUpload extends React.Component {
   }
 
   render () {
+    var serieKey = this.props.serieKey
+    var setPicture = this.props.setPicture
+    var getPicture = this.props.getPicture
+    var seriePictureURL = getPicture()
     let {imagePreviewUrl} = this.state
     let $imagePreview = null
 
-    if (imagePreviewUrl) {
+    function saveThisPicture () {
+      setPicture(serieKey,imagePreviewUrl)
+    }
+
+    function getThisPicture () {
+      getPicture(serieKey)
+    }
+
+    console.log(seriePictureURL)
+
+    if (imagePreviewUrl)
+    {
       $imagePreview = (<img src={imagePreviewUrl} />)
-    } else {
+      saveThisPicture()
+    }
+    else if (seriePictureURL !== null)
+    {
+      $imagePreview = (<img src={seriePictureURL} />)
+    }
+      else
+    {
       $imagePreview = (<div className='previewText'>Please select an image</div>)
     }
 
@@ -210,6 +318,6 @@ class ImageUpload extends React.Component {
       </div>
     )
   }
-}
+} */
 
 export default Series
