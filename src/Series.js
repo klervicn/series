@@ -246,7 +246,7 @@ class SeriePicture extends React.Component {
       <div className='PictureForm'>
         <form onSubmit={this.updateInputValue}>
           <label>
-            <input type='text' name='element' placeholder='TypePicture Path' value={this.state.inputValue} onChange={this.updateInputValue} />
+            <input type='text' name='element' placeholder='Type picture path' value={this.state.inputValue} onChange={this.updateInputValue} />
           </label>
           <button type='button' onClick={displayPicture}> Save </button>
         </form>
